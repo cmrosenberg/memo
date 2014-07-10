@@ -7,7 +7,9 @@
     var MOTIVES = document.querySelectorAll("#card-images img"),
     CONCEALED_URL = document.querySelector("img").src,
     BOARD = document.querySelectorAll("td"),
-    opened_card_index = -1, remaining_cards = 16, points = 0;
+    SCORE = document.querySelector("#score"),
+    REMAINING = document.querySelector("#remaining"),
+    opened_card_index = -1, remaining_pairs = 8, points = 0;
 
     function random_upto(max_index){
         return Math.floor((Math.random()*1000000)) % max_index;
@@ -75,9 +77,13 @@
         reset_open_card_index();
     }
 
+
     function reward_point(){
         points += 1;
-        console.log("Score!"+new String(points));
+        remaining_pairs -= 1;
+
+        SCORE.textContent = points;
+        REMAINING.textContent = remaining_pairs;
     }
 
     function createEventListener(motive, index){
