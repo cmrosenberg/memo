@@ -4,9 +4,10 @@
 
     "use strict";
 
-    var IMAGE_URLS = ["res/SVG/bell.svg", "res/SVG/briefcase.svg", "res/SVG/bug.svg", "res/SVG/clubs.svg", "res/SVG/earth.svg", "res/SVG/flag.svg", "res/SVG/gift.svg", "res/SVG/smiley.svg"],
-        CONCEALED_URL = "res/SVG/concealed.svg",
-        DOM_TABLE = document.querySelectorAll("td");
+    var MOTIVES = document.querySelectorAll("#card-images img"),
+    CONCEALED_URL = document.querySelector("img").src,
+    BOARD = document.querySelectorAll("td"),
+    opened_card_index = -1, remaining_cards = 16, points = 0;
 
     function random_upto(max_index){
         return Math.floor((Math.random()*1000000)) % max_index;
@@ -15,62 +16,104 @@
     function remove_index(array, index){
         array.splice(array.indexOf(index), 1);
     }
-    
-    function pick_index(indices){
+
+    function pick_random_index(indices){
         return indices[random_upto(indices.length)];
     }
-    
-    function pop_index(indices){
-        var index = pick_index(indices);
+
+    function pop_random_index(indices){
+        var index = pick_random_index(indices);
         remove_index(indices, index);
         return index;
     }
-    
-    function make_accessor_to(array, indices){
-        return function insert_pair(image_url) {
-            var i = pop_index(indices),
-                j = pop_index(indices);
-            array[i] = image_url;
-            array[j] = image_url;
-        };
-    }
-    
-    function shuffle_cards(image_urls){
+
+    function shuffle_motives(motives){
         var solution = new Array(16),
-            indices = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
-        
-        image_urls.forEach(make_accessor_to(solution, indices));
+        indices = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+
+
+        Array.prototype.forEach.call(motives, function insert_pair(image) {
+            var i = pop_random_index(indices),
+            j = pop_random_index(indices);
+            solution[i] = image;
+            solution[j] = image;
+        });
+
         return solution;
     }
-    
-    function make_toggler(cell, image_url){
-        var image = cell.querySelector('img');
-        var original_url = image.src;
-        return function toggle_image(){
-            if(image.src === original_url){
-                image.src = image_url;
+
+    function get_motive(index){
+        return BOARD[index].querySelector("img");
+    }
+
+    function open(new_motive, index){
+        var current_motive = get_motive(index);
+        current_motive.src = new_motive.src;
+    }
+
+    function exists_opened_card(){
+        return opened_card_index !== -1;
+    }
+
+    function pairs_match(i, j){
+        return get_motive(i).src === get_motive(j).src;
+    }
+
+    function reset_open_card_index(){
+        opened_card_index = -1;
+    }
+
+    function remove_cards(i, j){
+        BOARD[i].classList.add("solved");
+        BOARD[j].classList.add("solved");
+        reset_open_card_index();
+    }
+
+    function hide_cards(i, j){
+        BOARD[i].querySelector("img").src = CONCEALED_URL;
+        BOARD[j].querySelector("img").src = CONCEALED_URL;
+        reset_open_card_index();
+    }
+
+    function reward_point(){
+        points += 1;
+        console.log("Score!"+new String(points));
+    }
+
+    function createEventListener(motive, index){
+
+        return function when_user_opens_card(){
+            open(motive, index);
+
+            setTimeout(function(){
+            if(exists_opened_card()){
+
+                if(opened_card_index === index){
+                    return;
+                }
+
+                if(pairs_match(opened_card_index, index)){
+                    reward_point();
+                    remove_cards(opened_card_index, index);
+                }
+                else{
+                    hide_cards(opened_card_index, index);
+                }
             }
             else {
-                image.src = original_url;
+                opened_card_index = index;
             }
-        }
+        }, 1000);
     }
-    
-    function associate(cell, image_url){
-        var toggle = make_toggler(cell, image_url);
-        cell.onclick = toggle;
     }
-    
-    function associate_images_with_grid(grid, images){
-        var i;
-        for(i = 0; i < grid.length; i += 1){
-            associate(grid[i], images.pop());
-        }
-    }
-    
+
     function initialize_game(){
-        var shuffled_deck = shuffle_cards(IMAGE_URLS);
-        associate_images_with_grid(DOM_TABLE, shuffled_deck);
+        var i, lim = BOARD.length, shuffled_motives = shuffle_motives(MOTIVES);
+
+
+        for(i = 0; i < lim; i += 1){
+            BOARD[i].onclick = createEventListener(shuffled_motives.pop(), i);
+        }
     }
 
     initialize_game();
