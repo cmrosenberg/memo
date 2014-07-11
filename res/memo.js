@@ -6,10 +6,14 @@
 
     var MOTIVES = document.querySelectorAll("#card-images img"),
     CONCEALED_URL = document.querySelector("img").src,
+    CONCEALED_ALT = document.querySelector("img").alt,
     BOARD = document.querySelectorAll("td"),
     SCORE = document.querySelector("#score"),
+    NEW_GAME = document.querySelector("button"),
     REMAINING = document.querySelector("#remaining"),
-    WAIT_MILLISEC = 1000, opened_card_index = -1, nopened = 0, 
+    TRIES = document.querySelector("#tries"),
+    SUCCESS = document.querySelector("#success"),
+    WAIT_MILLISEC = 1000, opened_card_index = -1, nopened = 0,
     remaining_pairs = 8, points = 0;
 
     function random_upto(max_index){
@@ -91,6 +95,10 @@
         BOARD[j].classList.add("solved");
         reset_open_card_index();
         reset_nopened();
+
+        if(remaining_pairs === 0){
+            finished_game();
+        }
     }
 
     function hide_cards(i, j){
@@ -106,6 +114,34 @@
 
         SCORE.textContent = points;
         REMAINING.textContent = remaining_pairs;
+    }
+
+    function finished_game(){
+        SUCCESS.hidden = false;
+    }
+
+    function reset_DOM(){
+        SUCCESS.hidden = true;
+        SCORE.textContent = 0;
+        REMAINING.textContent = 0;
+        TRIES.textContent = 0;
+    }
+
+    function reset_board(){
+        Array.prototype.forEach.call(BOARD, function(cell) {
+            var motif  = cell.querySelector("img");
+            motif.src = CONCEALED_URL;
+            motif.alt = CONCEALED_ALT;
+            cell.classList.remove("solved");
+        });
+    }
+
+    function new_game(){
+        reset_DOM();
+        reset_board();
+        reset_open_card_index();
+        reset_nopened();
+        initialize_game();
     }
 
     function createEventListener(motive, index){
@@ -150,6 +186,7 @@
         }
     }
 
+    NEW_GAME.onclick = new_game;
     initialize_game();
 
 }());
