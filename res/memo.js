@@ -6,8 +6,10 @@
 
     var MOTIVES = document.querySelectorAll("#card-images img"),
     CONCEALED_URL = document.querySelector("img").src,
+    CONCEALED_ALT = document.querySelector("img").alt,
     BOARD = document.querySelectorAll("td"),
     SCORE = document.querySelector("#score"),
+    NEW_GAME = document.querySelector("button"),
     REMAINING = document.querySelector("#remaining"),
     TRIES = document.querySelector("#tries"),
     SUCCESS = document.querySelector("#success"),
@@ -118,6 +120,30 @@
         SUCCESS.hidden = false;
     }
 
+    function reset_DOM(){
+        SUCCESS.hidden = true;
+        SCORE.textContent = 0;
+        REMAINING.textContent = 0;
+        TRIES.textContent = 0;
+    }
+
+    function reset_board(){
+        Array.prototype.forEach.call(BOARD, function(cell) {
+            var motif  = cell.querySelector("img");
+            motif.src = CONCEALED_URL;
+            motif.alt = CONCEALED_ALT;
+            cell.classList.remove("solved");
+        });
+    }
+
+    function new_game(){
+        reset_DOM();
+        reset_board();
+        reset_open_card_index();
+        reset_nopened();
+        initialize_game();
+    }
+
     function createEventListener(motive, index){
 
         return function when_user_opens_card(){
@@ -131,7 +157,7 @@
             setTimeout(function(){
 
                 // We need this test in the callback function to avoid
-                // checking an index against itself, which could otherwise happen
+                // checking an index against itself, which can happen
                 // if the user "click-spams" the same card. We could avoid this
                 // if-test by making our predicates less naïve (ie. always checking
                 // that the provided indexes are distinct), but I felt this was
@@ -160,6 +186,7 @@
         }
     }
 
+    NEW_GAME.onclick = new_game;
     initialize_game();
 
 }());
