@@ -9,7 +9,8 @@
     BOARD = document.querySelectorAll("td"),
     SCORE = document.querySelector("#score"),
     REMAINING = document.querySelector("#remaining"),
-    opened_card_index = -1, remaining_pairs = 8, points = 0;
+    WAIT_MILLISEC = 1000, opened_card_index = -1, nopened = 0, 
+    remaining_pairs = 8, points = 0;
 
     function random_upto(max_index){
         return Math.floor((Math.random()*1000000)) % max_index;
@@ -44,6 +45,12 @@
         return solution;
     }
 
+    function illegal_move(index){
+        var clicking_on_same_card = exists_opened_card() && (index === opened_card_index),
+        already_two_cards_opened = (nopened === 2);
+        return clicking_on_same_card || already_two_cards_opened;
+    }
+
     function get_motive(index){
         return BOARD[index].querySelector("img");
     }
@@ -51,6 +58,16 @@
     function open(new_motive, index){
         var current_motive = get_motive(index);
         current_motive.src = new_motive.src;
+        nopened += 1;
+
+
+        /* We need the following test so that the opened_card_index
+         * is not reset before the callback in when_user_opens_card()
+         * is executed. This could happen if the user clicks on distinct
+         * cards in "rapid" (< WAIT_MILLISEC) succession. */
+        if(!exists_opened_card()){
+            opened_card_index = index;
+        }
     }
 
     function exists_opened_card(){
@@ -65,18 +82,23 @@
         opened_card_index = -1;
     }
 
+    function reset_nopened(){
+        nopened = 0;
+    }
+
     function remove_cards(i, j){
         BOARD[i].classList.add("solved");
         BOARD[j].classList.add("solved");
         reset_open_card_index();
+        reset_nopened();
     }
 
     function hide_cards(i, j){
         BOARD[i].querySelector("img").src = CONCEALED_URL;
         BOARD[j].querySelector("img").src = CONCEALED_URL;
         reset_open_card_index();
+        reset_nopened();
     }
-
 
     function reward_point(){
         points += 1;
@@ -89,10 +111,21 @@
     function createEventListener(motive, index){
 
         return function when_user_opens_card(){
+
+            if(illegal_move(index)){
+                return;
+            }
+
             open(motive, index);
 
             setTimeout(function(){
-            if(exists_opened_card()){
+
+                // We need this test in the callback function to avoid
+                // checking an index against itself, which could otherwise happen
+                // if the user "click-spams" the same card. We could avoid this
+                // if-test by making our predicates less naïve (ie. always checking
+                // that the provided indexes are distinct), but I felt this was
+                //  a better solution for now.
 
                 if(opened_card_index === index){
                     return;
@@ -105,17 +138,12 @@
                 else{
                     hide_cards(opened_card_index, index);
                 }
-            }
-            else {
-                opened_card_index = index;
-            }
-        }, 1000);
-    }
+            }, WAIT_MILLISEC);
+        }
     }
 
     function initialize_game(){
         var i, lim = BOARD.length, shuffled_motives = shuffle_motives(MOTIVES);
-
 
         for(i = 0; i < lim; i += 1){
             BOARD[i].onclick = createEventListener(shuffled_motives.pop(), i);
