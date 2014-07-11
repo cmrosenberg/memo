@@ -7,9 +7,7 @@
     var MOTIVES = document.querySelectorAll("#card-images img"),
     CONCEALED_URL = document.querySelector("img").src,
     BOARD = document.querySelectorAll("td"),
-    SCORE = document.querySelector("#score"),
-    REMAINING = document.querySelector("#remaining"),
-    opened_card_index = -1, remaining_pairs = 8, points = 0;
+    opened_card_index = -1, nopened = 0, remaining_cards = 16, points = 0;
 
     function random_upto(max_index){
         return Math.floor((Math.random()*1000000)) % max_index;
@@ -51,6 +49,7 @@
     function open(new_motive, index){
         var current_motive = get_motive(index);
         current_motive.src = new_motive.src;
+        nopened += 1;
     }
 
     function exists_opened_card(){
@@ -65,30 +64,37 @@
         opened_card_index = -1;
     }
 
+    function reset_nopened(){
+        nopened = 0;
+    }
+
     function remove_cards(i, j){
         BOARD[i].classList.add("solved");
         BOARD[j].classList.add("solved");
         reset_open_card_index();
+        reset_nopened();
     }
 
     function hide_cards(i, j){
         BOARD[i].querySelector("img").src = CONCEALED_URL;
         BOARD[j].querySelector("img").src = CONCEALED_URL;
         reset_open_card_index();
+        reset_nopened();
     }
-
 
     function reward_point(){
         points += 1;
-        remaining_pairs -= 1;
-
-        SCORE.textContent = points;
-        REMAINING.textContent = remaining_pairs;
+        console.log("Score!"+new String(points));
     }
 
     function createEventListener(motive, index){
 
         return function when_user_opens_card(){
+
+            if(nopened === 2){
+                return;
+            }
+
             open(motive, index);
 
             setTimeout(function(){
