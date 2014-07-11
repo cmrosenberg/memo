@@ -62,6 +62,7 @@
     function open(new_motive, index){
         var current_motive = get_motive(index);
         current_motive.src = new_motive.src;
+        current_motive.alt = new_motive.alt;
         nopened += 1;
 
 
@@ -103,7 +104,9 @@
 
     function hide_cards(i, j){
         BOARD[i].querySelector("img").src = CONCEALED_URL;
+        BOARD[i].querySelector("img").alt = CONCEALED_ALT;
         BOARD[j].querySelector("img").src = CONCEALED_URL;
+        BOARD[j].querySelector("img").alt = CONCEALED_ALT;
         reset_open_card_index();
         reset_nopened();
     }
