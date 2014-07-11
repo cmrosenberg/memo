@@ -9,7 +9,9 @@
     BOARD = document.querySelectorAll("td"),
     SCORE = document.querySelector("#score"),
     REMAINING = document.querySelector("#remaining"),
-    WAIT_MILLISEC = 1000, opened_card_index = -1, nopened = 0, 
+    TRIES = document.querySelector("#tries"),
+    SUCCESS = document.querySelector("#success"),
+    WAIT_MILLISEC = 1000, opened_card_index = -1, nopened = 0,
     remaining_pairs = 8, points = 0;
 
     function random_upto(max_index){
@@ -91,6 +93,10 @@
         BOARD[j].classList.add("solved");
         reset_open_card_index();
         reset_nopened();
+
+        if(remaining_pairs === 0){
+            finished_game();
+        }
     }
 
     function hide_cards(i, j){
@@ -106,6 +112,10 @@
 
         SCORE.textContent = points;
         REMAINING.textContent = remaining_pairs;
+    }
+
+    function finished_game(){
+        SUCCESS.hidden = false;
     }
 
     function createEventListener(motive, index){
