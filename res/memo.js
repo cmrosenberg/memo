@@ -6,8 +6,11 @@
 
     var MOTIVES = document.querySelectorAll("#card-images img"),
     CONCEALED_URL = document.querySelector("img").src,
-    BOARD = document.querySelectorAll("td"), WAIT_MILLISEC = 1000,
-    opened_card_index = -1, nopened = 0, remaining_cards = 16, points = 0;
+    BOARD = document.querySelectorAll("td"),
+    SCORE = document.querySelector("#score"),
+    REMAINING = document.querySelector("#remaining"),
+    WAIT_MILLISEC = 1000, opened_card_index = -1, nopened = 0, 
+    remaining_pairs = 8, points = 0;
 
     function random_upto(max_index){
         return Math.floor((Math.random()*1000000)) % max_index;
@@ -56,7 +59,13 @@
         var current_motive = get_motive(index);
         current_motive.src = new_motive.src;
         nopened += 1;
-        if(!exists_opened_card()){ /* Need this check to prevent race conditions */
+
+
+        /* We need the following test so that the opened_card_index
+         * is not reset before the callback in when_user_opens_card()
+         * is executed. This could happen if the user clicks on distinct
+         * cards in "rapid" (< WAIT_MILLISEC) succession. */
+        if(!exists_opened_card()){
             opened_card_index = index;
         }
     }
@@ -93,6 +102,10 @@
 
     function reward_point(){
         points += 1;
+        remaining_pairs -= 1;
+
+        SCORE.textContent = points;
+        REMAINING.textContent = remaining_pairs;
     }
 
     function createEventListener(motive, index){
@@ -107,6 +120,13 @@
 
             setTimeout(function(){
 
+                // We need this test in the callback function to avoid
+                // checking an index against itself, which could otherwise happen
+                // if the user "click-spams" the same card. We could avoid this
+                // if-test by making our predicates less naïve (ie. always checking
+                // that the provided indexes are distinct), but I felt this was
+                //  a better solution for now.
+
                 if(opened_card_index === index){
                     return;
                 }
@@ -118,13 +138,12 @@
                 else{
                     hide_cards(opened_card_index, index);
                 }
-        }, WAIT_MILLISEC);
-    }
+            }, WAIT_MILLISEC);
+        }
     }
 
     function initialize_game(){
         var i, lim = BOARD.length, shuffled_motives = shuffle_motives(MOTIVES);
-
 
         for(i = 0; i < lim; i += 1){
             BOARD[i].onclick = createEventListener(shuffled_motives.pop(), i);
