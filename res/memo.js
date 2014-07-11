@@ -14,7 +14,7 @@
     TRIES = document.querySelector("#tries"),
     SUCCESS = document.querySelector("#success"),
     WAIT_MILLISEC = 1000, opened_card_index = -1, nopened = 0,
-    remaining_pairs = 8, points = 0;
+    remaining_pairs = 8, points = 0, tries = 0;
 
     function random_upto(max_index){
         return Math.floor((Math.random()*1000000)) % max_index;
@@ -125,6 +125,10 @@
         SCORE.textContent = 0;
         REMAINING.textContent = 0;
         TRIES.textContent = 0;
+
+        reset_board();
+        reset_open_card_index();
+        reset_nopened();
     }
 
     function reset_board(){
@@ -138,9 +142,6 @@
 
     function new_game(){
         reset_DOM();
-        reset_board();
-        reset_open_card_index();
-        reset_nopened();
         initialize_game();
     }
 
