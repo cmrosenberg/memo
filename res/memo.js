@@ -6,7 +6,7 @@
 
     var MOTIVES = document.querySelectorAll("#card-images img"),
     CONCEALED_URL = document.querySelector("img").src,
-    BOARD = document.querySelectorAll("td"),
+    BOARD = document.querySelectorAll("td"), WAIT_MILLISEC = 1000,
     opened_card_index = -1, nopened = 0, remaining_cards = 16, points = 0;
 
     function random_upto(max_index){
@@ -42,6 +42,12 @@
         return solution;
     }
 
+    function illegal_move(index){
+        var clicking_on_same_card = exists_opened_card() && (index === opened_card_index),
+        already_two_cards_opened = (nopened === 2);
+        return clicking_on_same_card || already_two_cards_opened;
+    }
+
     function get_motive(index){
         return BOARD[index].querySelector("img");
     }
@@ -50,6 +56,9 @@
         var current_motive = get_motive(index);
         current_motive.src = new_motive.src;
         nopened += 1;
+        if(!exists_opened_card()){ /* Need this check to prevent race conditions */
+            opened_card_index = index;
+        }
     }
 
     function exists_opened_card(){
@@ -84,21 +93,19 @@
 
     function reward_point(){
         points += 1;
-        console.log("Score!"+new String(points));
     }
 
     function createEventListener(motive, index){
 
         return function when_user_opens_card(){
 
-            if(nopened === 2){
+            if(illegal_move(index)){
                 return;
             }
 
             open(motive, index);
 
             setTimeout(function(){
-            if(exists_opened_card()){
 
                 if(opened_card_index === index){
                     return;
@@ -111,11 +118,7 @@
                 else{
                     hide_cards(opened_card_index, index);
                 }
-            }
-            else {
-                opened_card_index = index;
-            }
-        }, 1000);
+        }, WAIT_MILLISEC);
     }
     }
 
