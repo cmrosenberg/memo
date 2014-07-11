@@ -14,7 +14,7 @@
     TRIES = document.querySelector("#tries"),
     SUCCESS = document.querySelector("#success"),
     WAIT_MILLISEC = 1000, opened_card_index = -1, nopened = 0,
-    remaining_pairs = 8, points = 0, tries = 0;
+    remaining_pairs = 8, points = 0;
 
     function random_upto(max_index){
         return Math.floor((Math.random()*1000000)) % max_index;
@@ -49,14 +49,13 @@
         return solution;
     }
 
-    function illegal_move(index){
-        var clicking_on_same_card = exists_opened_card() && (index === opened_card_index),
-        already_two_cards_opened = (nopened === 2);
-        return clicking_on_same_card || already_two_cards_opened;
-    }
 
     function get_motive(index){
         return BOARD[index].querySelector("img");
+    }
+
+    function exists_opened_card(){
+        return opened_card_index !== -1;
     }
 
     function open(new_motive, index){
@@ -75,8 +74,11 @@
         }
     }
 
-    function exists_opened_card(){
-        return opened_card_index !== -1;
+
+    function illegal_move(index){
+        var clicking_on_same_card = exists_opened_card() && (index === opened_card_index),
+        already_two_cards_opened = (nopened === 2);
+        return clicking_on_same_card || already_two_cards_opened;
     }
 
     function pairs_match(i, j){
@@ -89,6 +91,10 @@
 
     function reset_nopened(){
         nopened = 0;
+    }
+
+    function finished_game(){
+        SUCCESS.hidden = false;
     }
 
     function remove_cards(i, j){
@@ -119,9 +125,15 @@
         REMAINING.textContent = remaining_pairs;
     }
 
-    function finished_game(){
-        SUCCESS.hidden = false;
+    function reset_board(){
+        Array.prototype.forEach.call(BOARD, function(cell) {
+            var motif  = cell.querySelector("img");
+            motif.src = CONCEALED_URL;
+            motif.alt = CONCEALED_ALT;
+            cell.classList.remove("solved");
+        });
     }
+
 
     function reset_DOM(){
         SUCCESS.hidden = true;
@@ -132,20 +144,6 @@
         reset_board();
         reset_open_card_index();
         reset_nopened();
-    }
-
-    function reset_board(){
-        Array.prototype.forEach.call(BOARD, function(cell) {
-            var motif  = cell.querySelector("img");
-            motif.src = CONCEALED_URL;
-            motif.alt = CONCEALED_ALT;
-            cell.classList.remove("solved");
-        });
-    }
-
-    function new_game(){
-        reset_DOM();
-        initialize_game();
     }
 
     function createEventListener(motive, index){
@@ -179,7 +177,7 @@
                     hide_cards(opened_card_index, index);
                 }
             }, WAIT_MILLISEC);
-        }
+        };
     }
 
     function initialize_game(){
@@ -189,6 +187,13 @@
             BOARD[i].onclick = createEventListener(shuffled_motives.pop(), i);
         }
     }
+
+
+    function new_game(){
+        reset_DOM();
+        initialize_game();
+    }
+
 
     NEW_GAME.onclick = new_game;
     initialize_game();
