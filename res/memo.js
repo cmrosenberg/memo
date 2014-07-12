@@ -5,8 +5,7 @@
     "use strict";
 
     var MOTIVES = document.querySelectorAll("#card-images img"),
-    CONCEALED_URL = document.querySelector("img").src,
-    CONCEALED_ALT = document.querySelector("img").alt,
+    CONCEALED_TEXT = "An unopened card",
     BOARD = document.querySelectorAll("td"),
     SCORE = document.querySelector("#score"),
     NEW_GAME = document.querySelector("button"),
@@ -49,19 +48,13 @@
         return solution;
     }
 
-
-    function get_motive(index){
-        return BOARD[index].querySelector("img");
-    }
-
     function exists_opened_card(){
         return opened_card_index !== -1;
     }
 
     function open(new_motive, index){
-        var current_motive = get_motive(index);
-        current_motive.src = new_motive.src;
-        current_motive.alt = new_motive.alt;
+        console.log("In open")
+        BOARD[index].textContent = new_motive.alt;
         nopened += 1;
 
 
@@ -74,7 +67,6 @@
         }
     }
 
-
     function illegal_move(index){
         var clicking_on_same_card = exists_opened_card() && (index === opened_card_index),
         already_two_cards_opened = (nopened === 2);
@@ -82,7 +74,7 @@
     }
 
     function pairs_match(i, j){
-        return get_motive(i).src === get_motive(j).src;
+        return BOARD[i].textContent === BOARD[j].textContent;
     }
 
     function reset_open_card_index(){
@@ -109,10 +101,8 @@
     }
 
     function hide_cards(i, j){
-        BOARD[i].querySelector("img").src = CONCEALED_URL;
-        BOARD[i].querySelector("img").alt = CONCEALED_ALT;
-        BOARD[j].querySelector("img").src = CONCEALED_URL;
-        BOARD[j].querySelector("img").alt = CONCEALED_ALT;
+        BOARD[i].textContent = CONCEALED_TEXT;
+        BOARD[j].textContent = CONCEALED_TEXT;
         reset_open_card_index();
         reset_nopened();
     }
@@ -127,9 +117,7 @@
 
     function reset_board(){
         Array.prototype.forEach.call(BOARD, function(cell) {
-            var motif  = cell.querySelector("img");
-            motif.src = CONCEALED_URL;
-            motif.alt = CONCEALED_ALT;
+            cell.textContent = CONCEALED_TEXT;
             cell.classList.remove("solved");
         });
     }
