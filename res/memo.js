@@ -14,7 +14,7 @@
     TRIES = document.querySelector("#tries"),
     SUCCESS = document.querySelector("#success"),
     WAIT_MILLISEC = 1000, opened_card_index = -1, nopened = 0,
-    remaining_pairs = 8, points = 0;
+    remaining_pairs = 8, points = 0, tries = 0;
 
     function random_upto(max_index){
         return Math.floor((Math.random()*1000000)) % max_index;
@@ -134,16 +134,25 @@
         });
     }
 
+    function reset_tries(){
+        tries = 0;
+    }
 
     function reset_DOM(){
         SUCCESS.hidden = true;
         SCORE.textContent = 0;
-        REMAINING.textContent = 0;
+        REMAINING.textContent = 8;
         TRIES.textContent = 0;
 
         reset_board();
         reset_open_card_index();
         reset_nopened();
+        reset_tries();
+    }
+
+    function update_tries(){
+        tries += 1;
+        TRIES.textContent = tries;
     }
 
     function createEventListener(motive, index){
@@ -176,6 +185,9 @@
                 else{
                     hide_cards(opened_card_index, index);
                 }
+
+                update_tries();
+
             }, WAIT_MILLISEC);
         };
     }
@@ -187,7 +199,6 @@
             BOARD[i].onclick = createEventListener(shuffled_motives.pop(), i);
         }
     }
-
 
     function new_game(){
         reset_DOM();
