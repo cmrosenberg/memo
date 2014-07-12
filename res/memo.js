@@ -5,7 +5,9 @@
     "use strict";
 
     var MOTIVES = document.querySelectorAll("#card-images img"),
-    CONCEALED_TEXT = "An unopened card",
+    UNOPENED_TEXT = "An unopened card",
+    UNOPENED_CLASS = "unopened",
+    SOLVED_CLASS = "solved",
     BOARD = document.querySelectorAll("td"),
     SCORE = document.querySelector("#score"),
     NEW_GAME = document.querySelector("button"),
@@ -14,6 +16,9 @@
     SUCCESS = document.querySelector("#success"),
     WAIT_MILLISEC = 1000, opened_card_index = -1, nopened = 0,
     remaining_pairs = 8, points = 0, tries = 0;
+
+
+    // FUNCTIONS RELATED TO SHUFFLING THE CARDS
 
     function random_upto(max_index){
         return Math.floor((Math.random()*1000000)) % max_index;
@@ -48,23 +53,10 @@
         return solution;
     }
 
+    // GAME MECHANICS
+
     function exists_opened_card(){
         return opened_card_index !== -1;
-    }
-
-    function open(new_motive, index){
-        console.log("In open")
-        BOARD[index].textContent = new_motive.alt;
-        nopened += 1;
-
-
-        /* We need the following test so that the opened_card_index
-         * is not reset before the callback in when_user_opens_card()
-         * is executed. This could happen if the user clicks on distinct
-         * cards in "rapid" (< WAIT_MILLISEC) succession. */
-        if(!exists_opened_card()){
-            opened_card_index = index;
-        }
     }
 
     function illegal_move(index){
@@ -85,13 +77,53 @@
         nopened = 0;
     }
 
+    function reset_tries(){
+        tries = 0;
+    }
+
+    function update_tries(){
+        tries += 1;
+        TRIES.textContent = tries;
+    }
+
+
+    // DOM MANIPULATION FUNCTIONS
+
+
+    function remove_class(elem, classname){
+        if(elem.classList.contains(classname)){
+        elem.classList.remove(classname);
+        }
+    }
+
+    function add_class(elem, classname){
+        if(!elem.classList.contains(classname)){
+        elem.classList.add(classname);
+        }
+    }
+
+    function set_motive(tablecell, motive){
+        remove_class(tablecell, UNOPENED_CLASS);
+        tablecell.style.backgroundImage = "url("+motive.src+")";
+    }
+
+    function remove_card(tablecell){
+        tablecell.style.backgroundImage = "";
+        tablecell.textContent = "";
+    }
+
     function finished_game(){
         SUCCESS.hidden = false;
     }
 
     function remove_cards(i, j){
-        BOARD[i].classList.add("solved");
-        BOARD[j].classList.add("solved");
+
+        add_class(BOARD[i], SOLVED_CLASS);
+        add_class(BOARD[j], SOLVED_CLASS);
+
+        remove_card(BOARD[i]);
+        remove_card(BOARD[j]);
+
         reset_open_card_index();
         reset_nopened();
 
@@ -100,9 +132,15 @@
         }
     }
 
+    function hide(tablecell){
+        tablecell.textContent = UNOPENED_TEXT;
+        tablecell.style.backgroundImage = "";
+        add_class(tablecell, UNOPENED_CLASS);
+    }
+
     function hide_cards(i, j){
-        BOARD[i].textContent = CONCEALED_TEXT;
-        BOARD[j].textContent = CONCEALED_TEXT;
+        hide(BOARD[i]);
+        hide(BOARD[j]);
         reset_open_card_index();
         reset_nopened();
     }
@@ -117,13 +155,10 @@
 
     function reset_board(){
         Array.prototype.forEach.call(BOARD, function(cell) {
-            cell.textContent = CONCEALED_TEXT;
-            cell.classList.remove("solved");
+            cell.textContent = UNOPENED_TEXT;
+            remove_class(cell, SOLVED_CLASS);
+            add_class(cell, UNOPENED_CLASS);
         });
-    }
-
-    function reset_tries(){
-        tries = 0;
     }
 
     function reset_DOM(){
@@ -138,10 +173,23 @@
         reset_tries();
     }
 
-    function update_tries(){
-        tries += 1;
-        TRIES.textContent = tries;
+    function open(new_motive, index){
+        BOARD[index].textContent = new_motive.alt;
+        nopened += 1;
+
+
+        set_motive(BOARD[index], new_motive);
+
+        // We need the following test so that the opened_card_index
+        // is not reset before the callback in when_user_opens_card()
+        // is executed. This could happen if the user clicks on distinct
+        // cards in "rapid" (< WAIT_MILLISEC) succession.
+        if(!exists_opened_card()){
+            opened_card_index = index;
+        }
     }
+
+    // INITIALIZATION FUNCTIONS
 
     function createEventListener(motive, index){
 
@@ -192,7 +240,6 @@
         reset_DOM();
         initialize_game();
     }
-
 
     NEW_GAME.onclick = new_game;
     initialize_game();
