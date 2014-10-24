@@ -14,7 +14,7 @@
     REMAINING = document.querySelector("#remaining"),
     TRIES = document.querySelector("#tries"),
     SUCCESS = document.querySelector("#success"),
-    WAIT_MILLISEC = 1000, opened_card_index = -1, nopened = 0,
+    WAIT_MILLISEC = 600, opened_card = null, nopened = 0,
     remaining_pairs = 8, points = 0, tries = 0;
 
 
@@ -56,21 +56,21 @@
     // GAME MECHANICS
 
     function exists_opened_card(){
-        return opened_card_index !== -1;
+        return opened_card !== null;
     }
 
-    function illegal_move(index){
-        var clicking_on_same_card = exists_opened_card() && (index === opened_card_index),
+    function reset_open_card(){
+        opened_card = null;
+    }
+
+    function illegal_move(card){
+        var clicking_on_same_card = exists_opened_card() && (card === opened_card),
         already_two_cards_opened = (nopened === 2);
         return clicking_on_same_card || already_two_cards_opened;
     }
 
-    function pairs_match(i, j){
-        return BOARD[i].textContent === BOARD[j].textContent;
-    }
-
-    function reset_open_card_index(){
-        opened_card_index = -1;
+    function pairs_match(card_a, card_b){
+        return card_a.textContent === card_b.textContent;
     }
 
     function reset_nopened(){
@@ -102,29 +102,29 @@
         }
     }
 
-    function set_motive(tablecell, motive){
-        remove_class(tablecell, UNOPENED_CLASS);
-        tablecell.style.backgroundImage = "url("+motive.src+")";
+    function set_motive(card, motive){
+        remove_class(card, UNOPENED_CLASS);
+        card.style.backgroundImage = "url("+motive.src+")";
     }
 
-    function remove_card(tablecell){
-        tablecell.style.backgroundImage = "";
-        tablecell.textContent = "";
+    function remove_card(card){
+        card.style.backgroundImage = "";
+        card.textContent = "";
     }
 
     function finished_game(){
         SUCCESS.hidden = false;
     }
 
-    function remove_cards(i, j){
+    function remove_cards(card_a, card_b){
 
-        add_class(BOARD[i], SOLVED_CLASS);
-        add_class(BOARD[j], SOLVED_CLASS);
+        add_class(card_a, SOLVED_CLASS);
+        add_class(card_b, SOLVED_CLASS);
 
-        remove_card(BOARD[i]);
-        remove_card(BOARD[j]);
+        remove_card(card_a);
+        remove_card(card_b);
 
-        reset_open_card_index();
+        reset_open_card();
         reset_nopened();
 
         if(remaining_pairs === 0){
@@ -132,16 +132,16 @@
         }
     }
 
-    function hide(tablecell){
-        tablecell.textContent = UNOPENED_TEXT;
-        tablecell.style.backgroundImage = "";
-        add_class(tablecell, UNOPENED_CLASS);
+    function hide(card){
+        card.textContent = UNOPENED_TEXT;
+        card.style.backgroundImage = "";
+        add_class(card, UNOPENED_CLASS);
     }
 
-    function hide_cards(i, j){
-        hide(BOARD[i]);
-        hide(BOARD[j]);
-        reset_open_card_index();
+    function hide_cards(card_a, card_b){
+        hide(card_a);
+        hide(card_b);
+        reset_open_card();
         reset_nopened();
     }
 
@@ -154,10 +154,10 @@
     }
 
     function reset_board(){
-        Array.prototype.forEach.call(BOARD, function(cell) {
-            cell.textContent = UNOPENED_TEXT;
-            remove_class(cell, SOLVED_CLASS);
-            add_class(cell, UNOPENED_CLASS);
+        Array.prototype.forEach.call(BOARD, function(card) {
+            card.textContent = UNOPENED_TEXT;
+            remove_class(card, SOLVED_CLASS);
+            add_class(card, UNOPENED_CLASS);
         });
     }
 
@@ -168,58 +168,58 @@
         TRIES.textContent = 0;
 
         reset_board();
-        reset_open_card_index();
+        reset_open_card();
         reset_nopened();
         reset_tries();
     }
 
-    function open(new_motive, index){
-        BOARD[index].textContent = new_motive.alt;
+    function open(new_motive, card){
+        card.textContent = new_motive.alt;
         nopened += 1;
 
 
-        set_motive(BOARD[index], new_motive);
+        set_motive(card, new_motive);
 
-        // We need the following test so that the opened_card_index
+        // We need the following test so that the opened card
         // is not reset before the callback in when_user_opens_card()
         // is executed. This could happen if the user clicks on distinct
         // cards in "rapid" (< WAIT_MILLISEC) succession.
         if(!exists_opened_card()){
-            opened_card_index = index;
+            opened_card = card;
         }
     }
 
     // INITIALIZATION FUNCTIONS
 
-    function createEventListener(motive, index){
+    function createEventListener(motive, card){
 
         return function when_user_opens_card(){
 
-            if(illegal_move(index)){
+            if(illegal_move(card)){
                 return;
             }
 
-            open(motive, index);
+            open(motive, card);
 
             setTimeout(function(){
 
                 // We need this test in the callback function to avoid
-                // checking an index against itself, which could otherwise happen
+                // checking a card against itself, which could otherwise happen
                 // if the user "click-spams" the same card. We could avoid this
                 // if-test by making our predicates less naïve (ie. always checking
-                // that the provided indexes are distinct), but I felt this was
+                // that the provided cards are distinct), but I felt this was
                 //  a better solution for now.
 
-                if(opened_card_index === index){
+                if(opened_card === card){
                     return;
                 }
 
-                if(pairs_match(opened_card_index, index)){
+                if(pairs_match(opened_card, card)){
                     reward_point();
-                    remove_cards(opened_card_index, index);
+                    remove_cards(opened_card, card);
                 }
                 else{
-                    hide_cards(opened_card_index, index);
+                    hide_cards(opened_card, card);
                 }
 
                 update_tries();
@@ -229,11 +229,10 @@
     }
 
     function initialize_game(){
-        var i, lim = BOARD.length, shuffled_motives = shuffle_motives(MOTIVES);
-
-        for(i = 0; i < lim; i += 1){
-            BOARD[i].onclick = createEventListener(shuffled_motives.pop(), i);
-        }
+        var shuffled_motives = shuffle_motives(MOTIVES);
+        Array.prototype.forEach.call(BOARD, function(card){
+            card.onclick =createEventListener( shuffled_motives.pop(), card);
+        });
     }
 
     function new_game(){
