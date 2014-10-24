@@ -203,13 +203,7 @@
 
             setTimeout(function(){
 
-                // We need this test in the callback function to avoid
-                // checking a card against itself, which could otherwise happen
-                // if the user "click-spams" the same card. We could avoid this
-                // if-test by making our predicates less naïve (ie. always checking
-                // that the provided cards are distinct), but I felt this was
-                //  a better solution for now.
-
+                /* If the user clicks an already opened card */
                 if(opened_card === card){
                     return;
                 }
